@@ -48,10 +48,10 @@ public partial class MainWindow : Window
         QualityCombo.ItemsSource = AudioEngine.Qualities;
         QualityCombo.SelectedIndex = 0;
 
-        string defaultFolder = Path.Combine(
+        string folder = LoadSavedFolder() ?? Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "MicRec nahrávky");
-        OutputFolderBox.Text = defaultFolder;
-        LibraryTab.Initialize(defaultFolder);
+        OutputFolderBox.Text = folder;
+        LibraryTab.Initialize(folder);
 
         _uiTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(33) };
         _uiTimer.Tick += UiTimer_Tick;
@@ -210,6 +210,30 @@ public partial class MainWindow : Window
             TargetLabel.Text = $"{e.NewValue:0} dBFS";
     }
 
+    // Poslední zvolená složka pro nahrávky se pamatuje mezi spuštěními (%LOCALAPPDATA%\MicRec\folder.txt).
+    private static string SettingsFile => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MicRec", "folder.txt");
+
+    private static string? LoadSavedFolder()
+    {
+        try
+        {
+            if (!File.Exists(SettingsFile)) return null;
+            string path = File.ReadAllText(SettingsFile).Trim();
+            return path.Length > 0 && Directory.Exists(path) ? path : null;
+        }
+        catch { return null; }
+    }
+
+    private static void SaveFolder(string path)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(SettingsFile)!);
+            File.WriteAllText(SettingsFile, path);
+        }
+        catch { /* paměť složky není kritická */ }
+    }
     private void BtnBrowse_Click(object sender, RoutedEventArgs e)
     {
         using var dlg = new System.Windows.Forms.FolderBrowserDialog
@@ -224,6 +248,7 @@ public partial class MainWindow : Window
         {
             OutputFolderBox.Text = dlg.SelectedPath;
             LibraryTab.Initialize(dlg.SelectedPath);
+            SaveFolder(dlg.SelectedPath);
         }
     }
 
@@ -236,6 +261,7 @@ public partial class MainWindow : Window
             {
                 Directory.CreateDirectory(path);
                 LibraryTab.Initialize(path);
+                SaveFolder(path);
             }
             catch { /* leave as typed; user will get an error on Start instead */ }
         }
