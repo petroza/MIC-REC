@@ -1,0 +1,7 @@
+﻿bin/
+obj/
+.vs/
+*.user
+# zálohy předchozích verzí a hotový program (164 MB, přes limit GitHubu) — sestavte příkazem v README
+backups/
+*.exe

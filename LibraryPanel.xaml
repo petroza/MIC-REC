@@ -1,0 +1,114 @@
+<UserControl x:Class="MicRec.LibraryPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" xmlns:controls="clr-namespace:MicRec.Controls"
+             mc:Ignorable="d"
+             Background="Transparent" Foreground="{StaticResource TextBrush}" FontFamily="Segoe UI">
+    <UserControl.Resources>
+<ContextMenu x:Key="RecordingContextMenu" x:Shared="False" Opened="RecordingContextMenu_Opened"
+                     DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+            <MenuItem Header="Přehrát" Click="Play_Click" Tag="{Binding}"/>
+            <MenuItem Header="Převést na…" Click="Convert_Click" Tag="{Binding}"/>
+            <MenuItem Header="Přejmenovat…" Click="Rename_Click" Tag="{Binding}"/>
+            <MenuItem Header="Přesunout do…" Click="Move_Click" Tag="{Binding}"/>
+            <MenuItem Header="Otevřít umístění" Click="OpenLocation_Click" Tag="{Binding}"/>
+            <MenuItem Header="Smazat" Click="Delete_Click" Tag="{Binding}"/>
+        </ContextMenu>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,20">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+            <StackPanel><TextBlock Text="VAŠE NAHRÁVKY" Style="{StaticResource Caption}"/>
+                <TextBox x:Name="SearchBox" Width="360" HorizontalAlignment="Left" TextChanged="SearchBox_TextChanged" AutomationProperties.Name="Hledat nahrávky" ToolTip="Hledat podle názvu ve všech složkách"/>
+                <TextBlock Text="Hledání ve všech složkách · Ctrl / Shift: více nahrávek" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,7,0,0"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="22,0,0,0"><Button Content="+  Nová složka" Click="NewFolder_Click"/><Button Content="↻  Obnovit" Click="Refresh_Click" Margin="10,0,0,0"/></StackPanel>
+        </Grid>
+        <!-- Full-width recordings list -->
+        <Grid Grid.Row="1">
+            <Border Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource LineBrush}" BorderThickness="1" CornerRadius="6" Padding="6">
+                <Grid><DataGrid x:Name="RecordingsGrid" AutoGenerateColumns="False" IsReadOnly="True"
+                          Background="Transparent" Foreground="{StaticResource TextBrush}" BorderThickness="0"
+                          RowBackground="#121416" AlternatingRowBackground="#16181A"
+                          GridLinesVisibility="None" RowHeight="44" SelectionMode="Extended" SelectionUnit="FullRow" HorizontalGridLinesBrush="#25282B"
+                          HeadersVisibility="Column" CanUserAddRows="False"
+                          MouseDoubleClick="RecordingsGrid_MouseDoubleClick" PreviewMouseRightButtonDown="RecordingsGrid_PreviewMouseRightButtonDown" SelectionChanged="RecordingsGrid_SelectionChanged">
+                    <DataGrid.ColumnHeaderStyle>
+                        <Style TargetType="DataGridColumnHeader">
+                            <Setter Property="Background" Value="{StaticResource ControlBrush}"/>
+                            <Setter Property="Foreground" Value="{StaticResource TextBrush}"/>
+                            <Setter Property="Padding" Value="8,6"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource LineBrush}"/>
+                            <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                        </Style>
+                    </DataGrid.ColumnHeaderStyle>
+                    <DataGrid.Columns>
+                        <DataGridTemplateColumn Header="" Width="54">
+                            <DataGridTemplateColumn.CellStyle><Style TargetType="DataGridCell" BasedOn="{StaticResource {x:Type DataGridCell}}"><Setter Property="Padding" Value="0"/></Style></DataGridTemplateColumn.CellStyle><DataGridTemplateColumn.CellTemplate>
+                                <DataTemplate>
+                                    <Button Content="▶" Width="28" Height="28" MinHeight="0" Padding="0" Margin="0" VerticalAlignment="Center" HorizontalAlignment="Center" AutomationProperties.Name="Přehrát nahrávku" Click="Play_Click" Tag="{Binding}"/>
+                                </DataTemplate>
+                            </DataGridTemplateColumn.CellTemplate>
+                        </DataGridTemplateColumn>
+                        <DataGridTextColumn Header="Název" Binding="{Binding FileName}" Width="2*" MinWidth="150"/>
+                        <DataGridTextColumn Header="Složka" Binding="{Binding RelativeFolder}" Width="*" MinWidth="90"/>
+                        <DataGridTextColumn Header="Vytvořeno" Binding="{Binding CreatedDisplay}" Width="132"/>
+                        <DataGridTextColumn Header="Délka" Binding="{Binding DurationDisplay}" Width="66"/>
+                        <DataGridTextColumn Header="Velikost" Binding="{Binding SizeDisplay}" Width="72"/>
+                    </DataGrid.Columns>
+                    <DataGrid.RowStyle>
+                        <Style TargetType="DataGridRow">
+                            <Setter Property="ContextMenu" Value="{StaticResource RecordingContextMenu}"/>
+                        </Style>
+                    </DataGrid.RowStyle>
+                </DataGrid>
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" IsHitTestVisible="False">
+                    <StackPanel.Style><Style TargetType="StackPanel"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding HasItems, ElementName=RecordingsGrid}" Value="False"><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></StackPanel.Style>
+                    <TextBlock Text="Zatím je tu ticho." FontSize="21" HorizontalAlignment="Center" Margin="0,0,0,9"/>
+                    <TextBlock Text="Nahrajte první záznam nebo upravte hledání." Foreground="{StaticResource MutedBrush}" FontSize="12" TextWrapping="Wrap" TextAlignment="Center"/>
+                </StackPanel></Grid>
+            </Border>
+        </Grid>
+
+        <!-- Persistent transport: the waveform remains available after pause or stop. -->
+        <StackPanel Grid.Row="2" Margin="0,12,0,0">
+            <TextBlock x:Name="StatusText" Foreground="{StaticResource MutedBrush}" FontSize="11" Margin="0,0,0,10"/>
+            <Border x:Name="PreviewPanel" Style="{StaticResource Panel}" Padding="14" Visibility="Collapsed">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="96"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                    <StackPanel VerticalAlignment="Center" Margin="0,0,12,0">
+                        <controls:HalEye x:Name="PlaybackEye" Width="78" Height="78" AutomationProperties.Name="Oko HAL reagující na přehrávání"/>
+                        <TextBlock x:Name="PlaybackStateText" Text="Přehrávání" FontSize="10" HorizontalAlignment="Center" Margin="0,8,0,0" Foreground="{StaticResource MutedBrush}"/>
+                    </StackPanel>
+                    <Grid Grid.Column="1">
+                        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+                        <Grid Margin="0,0,0,10"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                            <TextBlock x:Name="NowPlayingText" TextTrimming="CharacterEllipsis" ToolTip="{Binding Text, RelativeSource={RelativeSource Self}}" VerticalAlignment="Center" Margin="0,0,12,0"/>
+                            <TextBlock x:Name="PlaybackTimeText" Grid.Column="1" Text="0:00 / 0:00" FontFamily="Consolas" Foreground="{StaticResource AccentBrush}" VerticalAlignment="Center"/>
+                        </Grid>
+                        <controls:WaveformTimeline x:Name="PreviewTimeline" Grid.Row="1" Height="112" SeekRequested="PreviewTimeline_SeekRequested" SelectionChanged="PreviewTimeline_SelectionChanged"/>
+                        <Grid Grid.Row="2" Margin="0,10,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                            <StackPanel Orientation="Horizontal">
+                                <Button x:Name="PreviewPlayPauseButton" Content="Ⅱ  Pauza" MinHeight="30" Padding="12,5" Click="PreviewPlayPause_Click"/>
+                                <Button x:Name="StopPreviewButton" Content="■  Zastavit" MinHeight="30" Padding="12,5" Margin="8,0,0,0" Click="StopPreview_Click"/>
+                                <Button x:Name="CutSelectionButton" Content="✂  Vystřihnout" MinHeight="30" Padding="12,5" Margin="8,0,0,0" IsEnabled="False" Click="CutSelection_Click"
+                                        ToolTip="Označte úsek na vlně přes Ctrl + tažení myší a vystřihněte ho — vznikne nová nahrávka bez tohoto úseku, originál zůstane zachován."/>
+                            </StackPanel>
+                            <TextBlock Grid.Column="1" Text="Ctrl + tažení: označit úsek ke střihu" HorizontalAlignment="Right" VerticalAlignment="Center" FontSize="10" Foreground="{StaticResource MutedBrush}"/>
+                        </Grid>
+                    </Grid>
+                </Grid>
+            </Border>
+        </StackPanel>
+    </Grid>
+</UserControl>
+
+

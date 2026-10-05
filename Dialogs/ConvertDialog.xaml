@@ -1,0 +1,29 @@
+<Window x:Class="MicRec.Dialogs.ConvertDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Převést nahrávku" SizeToContent="Height" Width="480"
+        WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+        Background="{StaticResource BackgroundBrush}" Foreground="{StaticResource TextBrush}" FontFamily="Segoe UI"
+        ShowInTaskbar="False">
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TextBlock x:Name="SourceText" Grid.Row="0" Margin="0,0,0,14" TextWrapping="Wrap" Foreground="{StaticResource TextBrush}"/>
+        <StackPanel Grid.Row="1" Orientation="Horizontal">
+            <TextBlock Text="Cílový formát:" VerticalAlignment="Center" Margin="0,0,10,0"/>
+            <ComboBox x:Name="FormatCombo" Width="240" Padding="6,4"
+                      Background="{StaticResource ControlBrush}" Foreground="{StaticResource TextBrush}" BorderBrush="{StaticResource LineBrush}"/>
+        </StackPanel>
+        <StackPanel Grid.Row="3" Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+            <Button Content="Zrušit" Width="84" Margin="0,0,8,0" Click="Cancel_Click"
+                    Background="{StaticResource ControlBrush}" Foreground="{StaticResource TextBrush}" BorderBrush="{StaticResource LineBrush}" Padding="8,6"/>
+            <Button Content="Převést" Width="90" Click="Ok_Click" IsDefault="True"
+                    Background="#753329" Foreground="{StaticResource TextBrush}" BorderBrush="{StaticResource LineBrush}" Padding="8,6"/>
+        </StackPanel>
+    </Grid>
+</Window>
+
